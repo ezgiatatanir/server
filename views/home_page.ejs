@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your IMDb Clone</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1A1A1A;
+            color: #FFFFFF;
+        }
+        span {
+            display: flex;
+            align-items: center;
+        }
+        span svg {
+            margin-right: 5px; /* Yıldız simgesi ile skor arasında boşluk */
+        }
+        .navbar-dark .navbar-brand svg {
+            fill: #F5C518;
+        }
+        .wrapper {
+            max-width: 1100px;
+            width: 100%;
+            position: relative;
+            margin: auto;
+        }
+        .wrapper i {
+            top: 50%;
+            height: 50px;
+            width: 50px;
+            cursor: pointer;
+            font-size: 1.25rem;
+            position: absolute;
+            text-align: center;
+            line-height: 50px;
+            background: #000;
+            color: #FFF;
+            border-radius: 50%;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.23);
+            transform: translateY(-50%);
+            transition: transform 0.1s linear;
+        }
+        .wrapper i:active {
+            transform: translateY(-50%) scale(0.85);
+        }
+        .wrapper i:first-child {
+            left: -22px;
+        }
+        .wrapper i:last-child {
+            right: -22px;
+        }
+        .wrapper .carousel {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: calc((100% / 6) - 12px);
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 26px;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+        }
+        .carousel::-webkit-scrollbar {
+            display: none;
+        }
+        .carousel.no-transition {
+            scroll-behavior: auto;
+        }
+        .carousel.dragging {
+            scroll-snap-type: none;
+            scroll-behavior: auto;
+        }
+        .carousel.dragging .card {
+            cursor: grab;
+            user-select: none;
+        }
+        .carousel .card,
+        .img {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .carousel .card {
+            scroll-snap-align: start;
+            height: 400px;
+            width: 200px;
+            list-style: none;
+            background: #222;
+            padding-bottom: 15px;
+            flex-direction: column;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card .img img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 0;
+        }
+        .carousel .card h2 {
+            font-weight: 500;
+            font-size: 1rem;
+            margin: 10px 0 5px;
+            text-align: center;
+        }
+        .carousel .card span {
+            color: #FFD700;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        .carousel .card .btn-primary {
+            background-color: #444;
+            border: none;
+            margin-top: 5px;
+            font-size: 0.8rem;
+            width: 90%;
+        }
+        @media (max-width: 768px) {
+            .wrapper .carousel {
+                grid-auto-columns: calc((100% / 2) - 12px);
+            }
+        }
+        @media (max-width: 576px) {
+            .wrapper .carousel {
+                grid-auto-columns: calc(100% - 12px);
+            }
+        }
+        .search-result {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1000;
+            display: none;
+            float: left;
+            min-width: 10rem;
+            padding: 0.5rem 0;
+            margin: 0.125rem 0 0;
+            font-size: 1rem;
+            color: #212529;
+            text-align: left;
+            list-style: none;
+            background-color: #000000;
+            background-clip: padding-box;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 0.25rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
+        }
+        .search-result img {
+            width: 50px;
+            margin-right: 10px;
+        }
+        .search-result li {
+            display: flex;
+            align-items: center;
+            padding: 0.25rem 0.25rem;
+            clear: both;
+            font-weight: 400;
+            color: #ffffff;
+            text-align: inherit;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0;
+        }
+        .search-result li:hover {
+            background-color: #e9ecef;
+        }
+        
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <a class="navbar-brand" href="/">
+                <svg id="home_img" class="ipc-logo" xmlns="http://www.w3.org/2000/svg" width="64" height="32" viewBox="0 0 64 32" version="1.1">
+                    <g fill="#F5C518">
+                        <rect x="0" y="0" width="100%" height="100%" rx="4"></rect>
+                    </g>
+                    <g transform="translate(8.000000, 7.000000)" fill="#000000" fill-rule="nonzero">
+                        <polygon points="0 18 5 18 5 0 0 0"></polygon>
+                        <path d="M15.6725178,0 L14.5534833,8.40846934 L13.8582008,3.83502426 C13.65661,2.37009263 13.4632474,1.09175121 13.278113,0 L7,0 L7,18 L11.2416347,18 L11.2580911,6.11380679 L13.0436094,18 L16.0633571,18 L17.7583653,5.8517865 L17.7707076,18 L22,18 L22,0 L15.6725178,0 Z"></path>
+                        <path d="M24,18 L24,0 L31.8045586,0 C33.5693522,0 35,1.41994415 35,3.17660424 L35,14.8233958 C35,16.5777858 33.5716617,18 31.8045586,18 L24,18 Z M29.8322479,3.2395236 C29.6339219,3.13233348 29.2545158,3.08072342 28.7026524,3.08072342 L28.7026524,14.8914865 C29.4312846,14.8914865 29.8796736,14.7604764 30.0478195,14.4865461 C30.2159654,14.2165858 30.3021941,13.486105 30.3021941,12.2871637 L30.3021941,5.3078959 C30.3021941,4.49404499 30.272014,3.97397442 30.2159654,3.74371416 C30.1599168,3.5134539 30.0348852,3.34671372 29.8322479,3.2395236 Z"></path>
+                        <path d="M44.4299079,4.50685823 L44.749518,4.50685823 C46.5447098,4.50685823 48,5.91267586 48,7.64486762 L48,14.8619906 C48,16.5950653 46.5451816,18 44.749518,18 L44.4299079,18 C43.3314617,18 42.3602746,17.4736618 41.7718697,16.6682739 L41.4838962,17.7687785 L37,17.7687785 L37,0 L41.7843263,0 L41.7843263,5.78053556 C42.4024982,5.01015739 43.3551514,4.50685823 44.4299079,4.50685823 Z M43.4055679,13.2842155 L43.4055679,9.01907814 C43.4055679,8.31433946 43.3603268,7.85185468 43.2660746,7.63896485 C43.1718224,7.42607505 42.7955881,7.2893916 42.5316822,7.2893916 C42.267776,7.2893916 41.8607934,7.40047379 41.7816216,7.58767002 L41.7816216,9.01907814 L41.7816216,13.4207851 L41.7816216,14.8074788 C41.8721037,15.0130276 42.2602358,15.1274059 42.5316822,15.1274059 C42.8031285,15.1274059 43.1982131,15.0166981 43.281155,14.8074788 C43.3640968,14.5982595 43.4055679,14.0880581 43.4055679,13.2842155 Z"></path>
+                    </g>
+                </svg>
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Menu</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="categoryDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            All
+                        </a>
+                        <div class="dropdown-menu bg-dark" aria-labelledby="categoryDropdownMenuLink">
+                            <a class="dropdown-item" href="#" data-category="all">All</a>
+                            <a class="dropdown-item" href="#" data-category="movies">Movies</a>
+                            <a class="dropdown-item" href="#" data-category="tv">TV Shows</a>
+                            <a class="dropdown-item" href="#" data-category="celebs">Celebrities</a>
+                        </div>
+                    </li>
+                </ul>
+                <form class="form-inline my-2 my-lg-0 position-relative" method="GET" action="/search_results">
+                    <input class="form-control mr-sm-2" type="search" id="search-input" name="q" placeholder="Search IMDb" aria-label="Search">
+                    <input type="hidden" name="category" id="category-input" value="all">
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="search-button">Search</button>
+                    <div class="search-result" id="search-result">
+                        <ul></ul>
+                    </div>
+                </form>
+                <div class="navbar-nav ml-auto">
+                    <a class="nav-link" ><svg class="ipc-logo navbar__imdbpro-menu-toggle__name" width="52" height="14" viewBox="0 0 52 14" xmlns="http://www.w3.org/2000/svg" version="1.1"><g fill="currentColor"><rect x="0" y="1" width="3.21" height="12.34"></rect><path d="M10,1 L9.3,6.76 L8.84,3.63 C8.7,2.62 8.58,1.75 8.45,1 L4.3,1 L4.3,13.34 L7.11,13.34 L7.11,5.19 L8.3,13.34 L10.3,13.34 L11.42,5 L11.42,13.33 L14.22,13.33 L14.22,1 L10,1 Z"></path><path d="M19.24,3.22 C19.3711159,3.29185219 19.4602235,3.42180078 19.48,3.57 C19.5340993,3.92393477 19.554191,4.28223587 19.54,4.64 L19.54,9.42 C19.578852,9.92887392 19.5246327,10.4405682 19.38,10.93 C19.27,11.12 18.99,11.21 18.53,11.21 L18.53,3.11 C18.7718735,3.09406934 19.0142863,3.13162626 19.24,3.22 Z M19.24,13.34 C19.8163127,13.3574057 20.3928505,13.3138302 20.96,13.21 C21.3245396,13.1481159 21.6680909,12.9969533 21.96,12.77 C22.2288287,12.5438006 22.4209712,12.2398661 22.51,11.9 C22.643288,11.1679419 22.6969338,10.4236056 22.67,9.68 L22.67,5.34 C22.6662002,4.55669241 22.6060449,3.77467335 22.49,3 C22.43037,2.59841431 22.260779,2.22116094 22,1.91 C21.6636187,1.56093667 21.2326608,1.317654 20.76,1.21 C19.7709421,1.02848785 18.7647002,0.958050915 17.76,1 L15.32,1 L15.32,13.34 L19.24,13.34 Z"></path><path d="M27.86,10.34 C27.8769902,10.7218086 27.8501483,11.1043064 27.78,11.48 C27.72,11.63 27.46,11.71 27.26,11.71 C27.0954951,11.7299271 26.9386363,11.6349863 26.88,11.48 C26.7930212,11.1542289 26.7592527,10.8165437 26.78,10.48 L26.78,7.18 C26.7626076,6.84408875 26.7929089,6.50740774 26.87,6.18 C26.9317534,6.03447231 27.0833938,5.94840616 27.24,5.97 C27.43,5.97 27.7,6.05 27.76,6.21 C27.8468064,6.53580251 27.8805721,6.87345964 27.86,7.21 L27.86,10.34 Z M23.7,1 L23.7,13.34 L26.58,13.34 L26.78,12.55 C27.0112432,12.8467609 27.3048209,13.0891332 27.64,13.26 C28.0022345,13.4198442 28.394069,13.5016184 28.79,13.5 C29.2588971,13.515288 29.7196211,13.3746089 30.1,13.1 C30.4399329,12.8800058 30.6913549,12.5471372 30.81,12.16 C30.9423503,11.6167622 31.0061799,11.0590937 31,10.5 L31,7 C31.0087531,6.51279482 30.9920637,6.02546488 30.95,5.54 C30.904474,5.28996521 30.801805,5.05382649 30.65,4.85 C30.4742549,4.59691259 30.2270668,4.40194735 29.94,4.29 C29.5869438,4.15031408 29.2096076,4.08232558 28.83,4.09 C28.4361722,4.08961884 28.0458787,4.16428368 27.68,4.31 C27.3513666,4.46911893 27.0587137,4.693713 26.82,4.97 L26.82,1 L23.7,1 Z"></path></g><g fill="#02ACD3"><path d="M32.13,1 L35.32,1 C35.9925574,0.978531332 36.6650118,1.04577677 37.32,1.2 C37.717112,1.29759578 38.0801182,1.50157071 38.37,1.79 C38.6060895,2.05302496 38.7682605,2.37391646 38.84,2.72 C38.935586,3.27463823 38.9757837,3.8374068 38.96,4.4 L38.96,5.46 C38.9916226,6.03689533 38.9100917,6.61440551 38.72,7.16 C38.5402933,7.53432344 38.2260614,7.82713037 37.84,7.98 C37.3049997,8.18709035 36.7332458,8.28238268 36.16,8.26 L35.31,8.26 L35.31,13.16 L32.13,13.16 L32.13,1 Z M35.29,3.08 L35.29,6.18 L35.53,6.18 C35.7515781,6.20532753 35.9725786,6.12797738 36.13,5.97 C36.2717869,5.69610033 36.3308522,5.38687568 36.3,5.08 L36.3,4.08 C36.3390022,3.79579475 36.2713114,3.5072181 36.11,3.27 C35.8671804,3.11299554 35.5771259,3.04578777 35.29,3.08 Z"></path><path d="M42,4.36 L41.89,5.52 C42.28,4.69 43.67,4.42 44.41,4.37 L43.6,7.3 C43.2290559,7.27725357 42.8582004,7.34593052 42.52,7.5 C42.3057075,7.61238438 42.1519927,7.81367763 42.1,8.05 C42.0178205,8.59259006 41.9843538,9.14144496 42,9.69 L42,13.16 L39.34,13.16 L39.34,4.36 L42,4.36 Z"></path><path d="M51.63,9.71 C51.6472876,10.3265292 51.6003682,10.9431837 51.49,11.55 C51.376862,11.9620426 51.1639158,12.3398504 50.87,12.65 C50.5352227,13.001529 50.1148049,13.2599826 49.65,13.4 C49.0994264,13.5686585 48.5257464,13.6496486 47.95,13.64 C47.3333389,13.6524659 46.7178074,13.5818311 46.12,13.43 C45.6996896,13.322764 45.3140099,13.1092627 45,12.81 C44.7275808,12.5275876 44.5254637,12.1850161 44.41,11.81 C44.2627681,11.2181509 44.1921903,10.6098373 44.2,10 L44.2,7.64 C44.1691064,6.9584837 44.2780071,6.27785447 44.52,5.64 C44.7547114,5.12751365 45.1616363,4.71351186 45.67,4.47 C46.3337168,4.13941646 47.0688388,3.97796445 47.81,4 C48.4454888,3.98667568 49.0783958,4.08482705 49.68,4.29 C50.1352004,4.42444561 50.5506052,4.66819552 50.89,5 C51.1535526,5.26601188 51.3550281,5.58700663 51.48,5.94 C51.6001358,6.42708696 51.6506379,6.92874119 51.63,7.43 L51.63,9.71 Z M48.39,6.73 C48.412199,6.42705368 48.3817488,6.12255154 48.3,5.83 C48.2091142,5.71223121 48.0687606,5.64325757 47.92,5.64325757 C47.7712394,5.64325757 47.6308858,5.71223121 47.54,5.83 C47.447616,6.12046452 47.4136298,6.42634058 47.44,6.73 L47.44,10.93 C47.4168299,11.2204468 47.4508034,11.5126191 47.54,11.79 C47.609766,11.9270995 47.7570827,12.0067302 47.91,11.99 C48.0639216,12.0108082 48.2159732,11.9406305 48.3,11.81 C48.3790864,11.5546009 48.4096133,11.2866434 48.39,11.02 L48.39,6.73 Z"></path></g></svg></a>
+                 <a class="nav-link">     <!--  <div  class="nav-link watchlist-button" data-logged-in="<%= user ? 'true' : 'false' %>"  >+ Watchlist</div> -->
+                  <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" class="ipc-icon ipc-icon--watchlist ipc-btn__icon ipc-btn__icon--pre" viewBox="0 0 24 24" fill="currentColor" role="presentation"><path d="M17 3c1.05 0 1.918.82 1.994 1.851L19 5v16l-7-3-7 3V5c0-1.05.82-1.918 1.851-1.994L7 3h10zm-4 4h-2v3H8v2h3v3h2v-3h3v-2h-3V7z" fill="currentColor"></path></svg>
+                  <a class="nav-link" href="/watchlist">+ Watchlist</a>    </a>
+                 
+                
+                    <% if (user) { %>
+                        <span class="nav-link"> 
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="ipc-icon ipc-icon--account-circle" viewBox="0 0 24 24" fill="currentColor" role="presentation">
+                            <path fill="none" d="M0 0h24v24H0V0z"></path>
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2a7.2 7.2 0 01-6-3.22c.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08a7.2 7.2 0 01-6 3.22z"></path>
+                        </svg>
+                       <%= user.name %>
+                    </span>
+                        <a class="nav-link" href="/logout">Logout</a>
+                    <% } else { %>
+                        <a class="nav-link" href="/login">Sign In</a>
+                    <% } %>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            EN
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="#" id="en">English</a>
+                            <a class="dropdown-item" href="#" id="tr">Türkçe</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <h1 class="mt-4" id="title">Top 10 on IMDb this week</h1>
+        <div class="wrapper">
+            <i id="left" class="fa-solid fa-angle-left"></i>
+            <ul class="carousel">
+                <% movies.forEach(function(movie) { %>
+                    <li class="card">
+                        <a href="/movie/<%= movie.id %>">
+                           
+                            <div class="img"><img src="<%= movie.poster_url %>" alt="<%= movie.title %>" draggable="false"></div>
+                           
+                            <span>
+                                <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" class="ipc-icon ipc-icon--star-inline" viewBox="0 0 24 24" fill="currentColor" role="presentation">
+                                    <path d="M12 20.1l5.82 3.682c1.066.675 2.37-.322 2.09-1.584l-1.543-6.926 5.146-4.667c.94-.85.435-2.465-.799-2.567l-6.773-.602L13.29.89a1.38 1.38 0 0 0-2.581 0l-2.65 6.53-6.774.602C.052 8.126-.453 9.74.486 10.59l5.147 4.666-1.542 6.926c-.28 1.262 1.023 2.26 2.09 1.585L12 20.099z"></path>
+                                </svg>
+                                <%= movie.imdb_score %>
+                            </span>
+                            <h2><%= movie.title %></h2>
+                        </a>
+                        <a href="<%= movie.trailer_url %>" class="btn btn-primary">Trailer</a>
+                  
+                       <div class="btn btn-primary watchlist-button" data-logged-in="<%= user ? 'true' : 'false' %>" data-film-id="<%= movie.id %>">+Watchlist</div>
+
+                       <h2><%= movie.id %></h2>
+
+
+                    </li>
+                <% }); %>
+            </ul>
+            
+            
+            
+            <i id="right" class="fa-solid fa-angle-right"></i>
+        </div>
+    </div>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Language switcher
+
+        document.querySelectorAll('.watchlist-button').forEach(button => {
+    button.addEventListener('click', function() {
+        const filmId = this.dataset.filmId; // Change this line if necessary
+        const userLoggedIn = this.dataset.loggedIn === 'true'; // Simplified this line
+
+        if (!userLoggedIn) {
+            window.location.href = '/login';
+        } else {
+            fetch('/add-to-watchlist', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ film_id: filmId })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => Promise.reject(data));
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(data.message);
+            })
+            .catch(error => {
+                console.error('Error adding movie to watchlist:', error);
+                alert('Failed to add movie to watchlist: ' + (error.error || 'Unknown error'));
+            });
+        }
+    });
+});
+
+
+        const langMap = {
+            en: {
+                title: "Top 10 on IMDb this week",
+                watchTrailer: "Trailer",
+                watchlist: "+Watchlist"
+            },
+            tr: {
+                title: "Bu hafta IMDb'de Top 10",
+                watchTrailer: "Fragman",
+                watchlist: "+İzleme Listesi"
+            }
+        };
+
+        function switchLanguage(language) {
+            document.getElementById("title").textContent = langMap[language].title;
+            document.querySelectorAll(".btn-primary").forEach((btn, index) => {
+                if(index % 2 === 0) { // Watch Trailer buttons
+                    btn.textContent = langMap[language].watchTrailer;
+                } else { // Watchlist buttons
+                    btn.textContent = langMap[language].watchlist;
+                }
+            });
+        }
+
+        document.getElementById("en").addEventListener("click", () => switchLanguage("en"));
+        document.getElementById("tr").addEventListener("click", () => switchLanguage("tr"));
+
+        // Detect browser language and set default language
+        const userLang = navigator.language || navigator.userLanguage;
+        const defaultLang = userLang.startsWith("tr") ? "tr" : "en";
+        switchLanguage(defaultLang);
+
+        // Carousel functionality
+        const wrapper = document.querySelector(".wrapper");
+        const carousel = document.querySelector(".carousel");
+        const firstCardWidth = carousel.querySelector(".card").offsetWidth;
+        const arrowBtns = document.querySelectorAll(".wrapper i");
+        const carouselChildrens = [...carousel.children];
+
+        let isDragging = false, isAutoPlay = true, startX, startScrollLeft, timeoutId;
+
+        // Get the number of cards that can fit in the carousel at once
+        let cardPerView = Math.round(carousel.offsetWidth / firstCardWidth);
+
+        // Insert copies of the last few cards to beginning of carousel for infinite scrolling
+        carouselChildrens.slice(-cardPerView).reverse().forEach(card => {
+            carousel.insertAdjacentHTML("afterbegin", card.outerHTML);
+        });
+
+        // Insert copies of the first few cards to end of carousel for infinite scrolling
+        carouselChildrens.slice(0, cardPerView).forEach(card => {
+            carousel.insertAdjacentHTML("beforeend", card.outerHTML);
+        });
+
+        // Scroll the carousel at appropriate position to hide first few duplicate cards on Firefox
+        carousel.classList.add("no-transition");
+        carousel.scrollLeft = carousel.offsetWidth;
+        carousel.classList.remove("no-transition");
+
+        // Add event listeners for the arrow buttons to scroll the carousel left and right
+        arrowBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                carousel.scrollLeft += btn.id == "left" ? -firstCardWidth : firstCardWidth;
+            });
+        });
+
+        const dragStart = (e) => {
+            isDragging = true;
+            carousel.classList.add("dragging");
+            // Records the initial cursor and scroll position of the carousel
+            startX = e.pageX;
+            startScrollLeft = carousel.scrollLeft;
+        }
+
+        const dragging = (e) => {
+            if(!isDragging) return; // if isDragging is false return from here
+            // Updates the scroll position of the carousel based on the cursor movement
+            carousel.scrollLeft = startScrollLeft - (e.pageX - startX);
+        }
+
+        const dragStop = () => {
+            isDragging = false;
+            carousel.classList.remove("dragging");
+        }
+
+        const infiniteScroll = () => {
+            // If the carousel is at the beginning, scroll to the end
+            if(carousel.scrollLeft === 0) {
+                carousel.classList.add("no-transition");
+                carousel.scrollLeft = carousel.scrollWidth - (2 * carousel.offsetWidth);
+                carousel.classList.remove("no-transition");
+            }
+            // If the carousel is at the end, scroll to the beginning
+            else if(Math.ceil(carousel.scrollLeft) === carousel.scrollWidth - carousel.offsetWidth) {
+                carousel.classList.add("no-transition");
+                carousel.scrollLeft = carousel.offsetWidth;
+                carousel.classList.remove("no-transition");
+            }
+
+            // Clear existing timeout & start autoplay if mouse is not hovering over carousel
+            clearTimeout(timeoutId);
+            if(!wrapper.matches(":hover")) autoPlay();
+        }
+
+        const autoPlay = () => {
+            if(window.innerWidth < 800 || !isAutoPlay) return; // Return if window is smaller than 800 or isAutoPlay is false
+            // Autoplay the carousel after every 2500 ms
+            timeoutId = setTimeout(() => carousel.scrollLeft += firstCardWidth, 2500);
+        }
+        autoPlay();
+
+        carousel.addEventListener("mousedown", dragStart);
+        carousel.addEventListener("mousemove", dragging);
+        document.addEventListener("mouseup", dragStop);
+        carousel.addEventListener("scroll", infiniteScroll);
+        wrapper.addEventListener("mouseenter", () => clearTimeout(timeoutId));
+        wrapper.addEventListener("mouseleave", autoPlay);
+
+    // Search functionality
+    const searchInput = document.getElementById('search-input');
+        const searchResult = document.getElementById('search-result');
+        let selectedCategory = 'all';
+
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            selectedCategory = e.target.dataset.category;
+            document.getElementById('categoryDropdownMenuLink').textContent = e.target.textContent;
+            document.getElementById('category-input').value = selectedCategory;
+        });
+    });
+
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.trim();
+            if (query.length >= 3) {
+                fetch(`/search?q=${query}&category=${selectedCategory}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const resultHTML = data.map(result => `
+                        <li>
+        <!-- Display the image, using poster_url if available, otherwise use image_url -->
+        <img src="${result.poster_url ? result.poster_url : result.profile_pic_url}" alt="${result.name}" width="50">
+        
+        <!-- Display the name of the result, and if it's a movie, include the release date -->
+        ${result.title ? result.title : result.name} ${result.release_date ? `(${result.release_date})` : ''}
+    </li>
+                        `).join('');
+                        searchResult.querySelector('ul').innerHTML = resultHTML;
+                        searchResult.style.display = 'block';
+                    });
+            } else {
+                searchResult.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!searchInput.contains(event.target) && !searchResult.contains(event.target)) {
+                searchResult.style.display = 'none';
+            }
+        });
+
+
+ 
+
+
+
+
+
+
+
+    </script>
+</body>
+</html>

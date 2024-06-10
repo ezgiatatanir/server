@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Watchlist</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #121212; /* Dark background for the body */
+            color: #e0e0e0; /* Light grey text color for readability on dark background */
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+            padding: 20px;
+            background-color: #1e1e1e; /* Darker grey for the container */
+            box-shadow: 0 0 20px 0 rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #fff; /* White color for headings */
+        }
+        .list-group {
+            list-style: none;
+            padding: 0;
+        }
+        .list-group-item {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #2a2a2a; /* Slightly lighter grey for items */
+            border: 1px solid #333; /* Border color for elements */
+            border-radius: 5px;
+        }
+        .list-group-item img {
+            width: 100%; /* Full width of the grid column */
+            border-radius: 5px;
+        }
+        .list-group-item a {
+            text-decoration: none;
+            color: #4daff7; /* Bright blue for links to stand out */
+        }
+        .list-group-item a:hover {
+            color: #82d4f9; /* Lighter blue on hover for better interaction feedback */
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your Watchlist</h1>
+        <% if (watchlistMovies && watchlistMovies.length > 0) { %>
+            <ul class="list-group">
+                <% watchlistMovies.forEach(movie => { %>
+                    <li class="list-group-item">
+                        <img src="<%= movie.poster_url %>" alt="<%= movie.title %> Poster">
+                        <div>
+                            <strong><%= movie.title %></strong>
+                            <p><%= movie.description %></p>
+                            <a href="/movie/<%= movie.id %>">View details</a>
+                        </div>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } else { %>
+            <p>You have no movies in your watchlist.</p>
+        <% } %>
+    </div>
+</body>
+</html>
